@@ -1,0 +1,109 @@
+package main;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class Main {
+    
+    private void documentDistance(String document1, String document2) {
+        Map<String, Integer> doc1 = getWordFrequency(document1);
+        Map<String, Integer> doc2 = getWordFrequency(document2);
+        
+        double angle = getVectorAngle(doc1, doc2);
+        double alike = ( (Math.PI / 2 - angle) / (Math.PI/2) ) * 100;
+        
+        System.out.println(angle);
+        System.out.println("The 2 documents are " + alike + "% alike!");
+    }
+    
+    private Map<String, Integer> getWordFrequency(String url) {
+        String lines = getWordsFromLineList(url);
+        List<String> words = getWords(lines);
+        Map<String, Integer> map = getFrequency(words);
+        
+        return map;
+    }
+    
+    private String getWordsFromLineList(String url) {
+        List<String> list = new ArrayList<>();
+        
+        Path p1 = Paths.get(url);
+        
+        try {
+            list = Files.readAllLines(p1);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        
+        return list.toString();
+    }
+    
+    private List<String> getWords(String line) {
+        List<String> list = new ArrayList<>();
+        
+        String [] input = line.replaceAll("[^a-zA-Z\\s]", "")
+                              .toLowerCase()
+                              .split("\\s+");
+        
+        for(String s : input) {
+            list.add(s);
+        }
+                
+        return list;
+    }
+    
+    private Map<String, Integer> getFrequency(List<String> words) {
+        Map<String, Integer> frequency = new HashMap<>();
+        
+        for(String word : words) {
+            if(!frequency.containsKey(word)) {
+                frequency.put(word, 1);
+            } else {
+                frequency.put(word, frequency.get(word) + 1);
+            }
+        }
+        
+        return frequency;
+    }
+    
+    private double getVectorAngle(Map<String, Integer> document1, 
+                                  Map<String, Integer> document2) {
+        
+        double numerator = innerProduct(document1, document2);
+        double denominator = 
+                Math.sqrt(innerProduct(document1, document1)*
+                          innerProduct(document2, document2));
+        
+        return Math.acos(numerator / denominator);
+    }
+    
+    private double innerProduct(Map<String, Integer> document1, 
+                                  Map<String, Integer> document2) {
+        double sum = 0;
+        
+        for(String key : document1.keySet()) {
+            if(document2.containsKey(key)) {
+                sum += document1.get(key) * document2.get(key);
+            }
+        }
+        
+        return sum;
+    }
+
+    public static void main(String[] args) {
+        String document1 = "C:\\Users\\Radu\\Desktop\\doc1.txt";
+        String document2 = "C:\\Users\\Radu\\Desktop\\doc2.txt";
+        
+        Main m = new Main();
+        
+        m.documentDistance(document1, document2);
+        
+    }
+
+}
